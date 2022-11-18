@@ -5,7 +5,11 @@ export JAVA_HOME=/usr/csshare/pkgs/jdk1.7.0_17
 export PATH=$JAVA_HOME/bin:$PATH
 
 # compile the java program
-javac -d $DIR/../classes $DIR/../src/Retail.java
+# javac -d $DIR/../classes -cp $DIR/../classes $DIR/../src/Retail.java
+
+# allows all java classes to be compiled
+javac -d $DIR/../classes -cp $DIR/../classes $DIR/../src/*.java 
+
 
 #run the java program
 #Use your database name, port number and login
