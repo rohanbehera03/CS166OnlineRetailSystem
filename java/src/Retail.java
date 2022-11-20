@@ -309,7 +309,7 @@ public class Retail {
 
                 //the following functionalities basically used by managers
                 System.out.println("5. Update Product");
-                System.out.println("6. View 5 recent Product Updates Info");
+                System.out.println("6. View recent Product Updates Info");
                 System.out.println("7. View 5 Popular Items");
                 System.out.println("8. View 5 Popular Customers");
                 System.out.println("9. Place Product Supply Request to Warehouse");
@@ -334,7 +334,7 @@ public class Retail {
             }
          }//end while
       }catch(Exception e) {
-         System.err.println (e.getMessage ());
+         System.err.println (e.getMessage());
       }finally{
          // make sure to cleanup the created table and close the connection.
          try{
@@ -397,12 +397,12 @@ public class Retail {
          esql.executeUpdate(query);
          System.out.println ("User successfully created!");
       }catch(Exception e){
-         System.err.println (e.getMessage ());
+         System.err.println(e.getMessage());
       }
    }//end CreateUser
 
 
-   /*
+  /*
     * Check log in credentials for an existing user
     * @return User login or null is the user does not exist
     **/
@@ -412,6 +412,7 @@ public class Retail {
          String name = in.readLine();
          System.out.print("\tEnter password: ");
          String password = in.readLine();
+         
 
          String query = String.format("SELECT * FROM USERS WHERE name = '%s' AND password = '%s'", name, password);
          int userNum = esql.executeQuery(query);
@@ -419,13 +420,12 @@ public class Retail {
 		return name;
          return null;
       }catch(Exception e){
-         System.err.println (e.getMessage ());
+         System.err.println(e.getMessage());
          return null;
       }
    }//end
 
-// Rest of the functions definition go in here
-
+   // browse stores
    public static void viewStores(Retail esql) { 
       try {
           System.out.println("\tEnter user latitude: ");  //enter lat value between [0.0, 100.0]
@@ -475,10 +475,11 @@ public class Retail {
             }
 
       } catch(Exception e) {
-         System.err.println (e.getMessage());
+         System.err.println(e.getMessage());
       }
    }
 
+   // browse products
    public static void viewProducts(Retail esql) {
       try {
          System.out.println("\tEnter a storeID for store you want to view products from: ");
@@ -486,19 +487,58 @@ public class Retail {
          String query = String.format("SELECT ProductName, numberOfUnits, pricePerUnit FROM Product WHERE storeID = '%s'", store_id);
          
          int rowCount = esql.executeQueryAndPrintResult(query);
-         System.out.println ("total row(s): " + rowCount);
+         System.out.println("Products list: " + rowCount);
       }
       catch(Exception e){
-         System.err.println (e.getMessage());
+         System.err.println(e.getMessage());
       }
    }
 
+   //order products 
    public static void placeOrder(Retail esql) {}
-   public static void viewRecentOrders(Retail esql) {}
+
+   //browse orders list. customers can see last 5 recent orders
+   public static void viewRecentOrders(Retail esql) {
+      try {
+      System.out.println("\tEnter userID: ");
+      int user_id = Integer.parseInt(in.readLine());   
+     
+       String query = String.format("SELECT O.storeID, S.name, O.productName, O.unitsOrdered, O.orderTime FROM Orders O, Store S, Users U WHERE O.storeID = S.storeID AND U.userID = O.customerID AND O.orderNumber IN (SELECT O.orderNumber FROM Orders O, Store S, Users U WHERE customerID = '%s' GROUP BY O.orderNumber ORDER BY MAX(O.orderTime) desc LIMIT 5)", user_id);
+
+      int rowCount = esql.executeQueryAndPrintResult(query);
+      System.out.println("Order history: " + rowCount);
+
+      }
+      catch(Exception e){
+         System.err.println(e.getMessage());
+      }
+   }
+
+   //managers update product information given storeID, they can view last 5 recent updates of their store
    public static void updateProduct(Retail esql) {}
-   public static void viewRecentUpdates(Retail esql) {}
+
+   //manager can see all the orders information of the store(s) he/she manages.
+   public static void viewRecentUpdates(Retail esql) {
+      try {
+         System.out.println("\tEnter managerID: ");
+         int manager_id = Integer.parseInt(in.readLine());
+
+         String query = String.format("SELECT O.orderNumber, U.name, O.storeID, O.productName, O.orderTime FROM Orders O, Store S, Users U WHERE S.managerID = '%s' AND O.storeID = S.storeID AND U.userID = O.customerID", manager_id);
+         int rowCount = esql.executeQueryAndPrintResult(query);
+         System.out.println("Order information: " + rowCount);
+      }
+      catch(Exception e) {
+         System.err.println(e.getMessage());
+      }
+   } 
+
+   //manager can see top 5 most popular products in his/her store
    public static void viewPopularProducts(Retail esql) {}
+
+   //manager can view the top 5 customer's information who placed the most orders in his/her store
    public static void viewPopularCustomers(Retail esql) {}
+
+   //put supply requests function
    public static void placeProductSupplyRequests(Retail esql) {}
 
 
