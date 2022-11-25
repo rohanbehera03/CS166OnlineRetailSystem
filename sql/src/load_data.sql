@@ -1,32 +1,32 @@
 COPY Users
-FROM 'users.csv'
+FROM '/Users/rohanbehera/Desktop/CS166/new-project166/data/users.csv'
 WITH DELIMITER ',' CSV HEADER;
 ALTER SEQUENCE users_userID_seq RESTART 101;
 
 COPY Store
-FROM 'stores.csv'
+FROM '/Users/rohanbehera/Desktop/CS166/new-project166/data/stores.csv'
 WITH DELIMITER ',' CSV HEADER;
 
 COPY Product
-FROM 'products.csv'
+FROM '/Users/rohanbehera/Desktop/CS166/new-project166/data/products.csv'
 WITH DELIMITER ',' CSV HEADER;
 
 COPY Warehouse
-FROM 'warehouse.csv'
+FROM '/Users/rohanbehera/Desktop/CS166/new-project166/data/warehouse.csv'
 WITH DELIMITER ',' CSV HEADER;
 
 COPY Orders
-FROM 'orders.csv'
+FROM '/Users/rohanbehera/Desktop/CS166/new-project166/data/orders.csv'
 WITH DELIMITER ',' CSV HEADER;
 ALTER SEQUENCE orders_orderNumber_seq RESTART 501;
 
 
 COPY ProductSupplyRequests
-FROM 'productSupplyRequests.csv'
+FROM '/Users/rohanbehera/Desktop/CS166/new-project166/data/productSupplyRequests.csv'
 WITH DELIMITER ',' CSV HEADER;
 ALTER SEQUENCE productsupplyrequests_requestNumber_seq RESTART 11;
 
 COPY ProductUpdates
-FROM 'productUpdates.csv'
+FROM '/Users/rohanbehera/Desktop/CS166/new-project166/data/productUpdates.csv'
 WITH DELIMITER ',' CSV HEADER;
 ALTER SEQUENCE productupdates_updateNumber_seq RESTART 51;
