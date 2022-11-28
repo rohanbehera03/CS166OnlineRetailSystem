@@ -425,7 +425,7 @@ public class Retail {
       }
    }//end
 
-   // browse stores
+   // browse stores. Allows the user to see the list of stores within 30 miles of his/her location.
    public static void viewStores(Retail esql) { 
       try {
           System.out.println("\tEnter user latitude: ");  //enter lat value between [0.0, 100.0]
@@ -479,7 +479,7 @@ public class Retail {
       }
    }
 
-   // browse products
+   // browse products. Allows the user to input the storeID of a store and then returns the list of products of that store with all the information like name, number of units available, and price per unit.
    public static void viewProducts(Retail esql) {
       try {
          System.out.println("\tEnter a storeID for store you want to view products from: ");
@@ -494,10 +494,16 @@ public class Retail {
       }
    }
 
-   //order products 
+   //order products. User can order any product from the store within 30 miles radius of his/her location. User will be asked to input storeID, productName, and numberofUnits. 
+   // After placing the order, the order information needs to be inserted in the Orders table. Product tables will need to be updated accordingly.
    public static void placeOrder(Retail esql) {}
 
-   //browse orders list. customers can see last 5 recent orders
+   //Update Product Information. For Managers, they can update the information of any product given the storeID. Manager can only update the product information (number of units, price per unit) of the store he/she manages. 
+   //Product and ProductUpdates tables will need to be updated accordingly if any updates take place. Manager can also view the information of last 5 recent updates of his/her store(s).
+   public static void updateProduct(Retail esql) {}
+	   
+   //browse orders list. Customers will be able to see the last 5 of his/her recent orders from the Orders table. They will be able to see storeID, storeName, productName, number of units ordered and date ordered. 
+   //A customer is not allowed to see the order list of other customers.
    public static void viewRecentOrders(Retail esql) {
       try {
       System.out.println("\tEnter userID: ");
@@ -514,10 +520,7 @@ public class Retail {
       }
    }
 
-   //managers update product information given storeID, they can view last 5 recent updates of their store
-   public static void updateProduct(Retail esql) {}
-
-   //manager can see all the orders information of the store(s) he/she manages.
+   // Manager can see all the orders information of the store(s) he/she manages. They will be able to see orderID, customer name, storeID, productName, and date of order for each order.
    public static void viewRecentUpdates(Retail esql) {
       try {
          System.out.println("\tEnter managerID: ");
@@ -533,10 +536,40 @@ public class Retail {
    } 
 
    //manager can see top 5 most popular products in his/her store
-   public static void viewPopularProducts(Retail esql) {}
+   public static void viewPopularProducts(Retail esql) {
+   	try {
+         System.out.println("\tEnter managerID: ");
+         int manager_id = Integer.parseInt(in.readLine());
+         
+         System.out.println("\tEnter storeID: ");
+         int store_id =  Integer.parseInt(in.readLine());
+
+         String query = String.format("SELECT O.productName, O.unitsOrdered FROM Orders O, Store S, Users U WHERE O.storeID = S.storeID AND U.userID =  O.customerID AND O.orderNumber IN (SELECT O.orderNumber FROM Orders O, Store S, Users U WHERE S.storeID = '%s' AND S.managerID = '%s' GROUP BY O.orderNumber ORDER BY MAX(O.unitsOrdered) desc LIMIT 5)", store_id, manager_id);
+         int rowCount = esql.executeQueryAndPrintResult(query);
+         System.out.println("Top 5 most popular products in Store: " + rowCount);
+      }
+      catch(Exception e) {
+         System.err.println(e.getMessage());
+      }
+   }
 
    //manager can view the top 5 customer's information who placed the most orders in his/her store
-   public static void viewPopularCustomers(Retail esql) {}
+   public static void viewPopularCustomers(Retail esql) {
+   	try {
+         System.out.println("\tEnter managerID: ");
+         int manager_id = Integer.parseInt(in.readLine());
+         
+         System.out.println("\tEnter storeID: ");
+         int store_id =  Integer.parseInt(in.readLine());
+
+         String query = String.format("SELECT U.userID, U.name, U.latitude, U.longitude, O.unitsOrdered FROM Orders O, Store S, Users U WHERE O.storeID = S.storeID AND U.userID =  O.customerID AND O.orderNumber IN (SELECT O.orderNumber FROM Orders O, Store S, Users U WHERE S.storeID = '%s' AND S.managerID = '%s' GROUP BY O.orderNumber ORDER BY MAX(O.unitsOrdered) desc LIMIT 5)", store_id, manager_id);
+         int rowCount = esql.executeQueryAndPrintResult(query);
+         System.out.println("Top 5 customers: " + rowCount);
+      }
+      catch(Exception e) {
+         System.err.println(e.getMessage());
+      } 
+   }
 
    //put supply requests function
    public static void placeProductSupplyRequests(Retail esql) {}
