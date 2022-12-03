@@ -25,6 +25,10 @@ import java.io.InputStreamReader;
 import java.util.List;
 import java.util.ArrayList;
 import java.lang.Math;
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Calendar;
 
 /**
  * This class defines a simple embedded SQL utility class that is designed to
@@ -199,6 +203,7 @@ public class Retail {
       return result;
    }//end executeQueryAndReturnResult
 
+
    /**
     * Method to execute an input query SQL instruction (i.e. SELECT).  This
     * method issues the query to the DBMS and returns the number of results
@@ -309,10 +314,12 @@ public class Retail {
 
                 //the following functionalities basically used by managers
                 System.out.println("5. Update Product");
-                System.out.println("6. View recent Product Updates Info");
+                System.out.println("6. View 5 recent Product Updates Info");
                 System.out.println("7. View 5 Popular Items");
                 System.out.println("8. View 5 Popular Customers");
                 System.out.println("9. Place Product Supply Request to Warehouse");
+                System.out.println("10. Admin Update Product");
+                System.out.println("11. Admin Update Users");
 
                 System.out.println(".........................");
                 System.out.println("20. Log out");
@@ -326,6 +333,8 @@ public class Retail {
                    case 7: viewPopularProducts(esql); break;
                    case 8: viewPopularCustomers(esql); break;
                    case 9: placeProductSupplyRequests(esql); break;
+                   case 10: updateProductAdmin(esql); break;
+                   case 11: updateUserAdmin(esql); break;
 
                    case 20: usermenu = false; break;
                    default : System.out.println("Unrecognized choice!"); break;
@@ -409,15 +418,15 @@ public class Retail {
    public static String LogIn(Retail esql){
       try{
          System.out.print("\tEnter name: ");
-         String name = in.readLine();
+         String user_name = in.readLine();
          System.out.print("\tEnter password: ");
          String password = in.readLine();
          
+         String query = String.format("SELECT * FROM USERS WHERE name = '%s' AND password = '%s'", user_name, password);
 
-         String query = String.format("SELECT * FROM USERS WHERE name = '%s' AND password = '%s'", name, password);
          int userNum = esql.executeQuery(query);
 	 if (userNum > 0)
-		return name;
+		return user_name;
          return null;
       }catch(Exception e){
          System.err.println(e.getMessage());
@@ -425,14 +434,13 @@ public class Retail {
       }
    }//end
 
-   // browse stores. Allows the user to see the list of stores within 30 miles of his/her location.
+   // browse stores
    public static void viewStores(Retail esql) { 
-      try {
+     try {
           System.out.println("\tEnter user latitude: ");  //enter lat value between [0.0, 100.0]
          double userLatitude = Double.parseDouble(in.readLine());       
          System.out.println("\tEnter user longitude: ");  //enter long value between [0.0, 100.0]
          double userLongitude = Double.parseDouble(in.readLine());
-
       /*
       Query for all the stores : SELECT * FROM Stores;
       Create a list
@@ -479,7 +487,7 @@ public class Retail {
       }
    }
 
-   // browse products. Allows the user to input the storeID of a store and then returns the list of products of that store with all the information like name, number of units available, and price per unit.
+   // browse products
    public static void viewProducts(Retail esql) {
       try {
          System.out.println("\tEnter a storeID for store you want to view products from: ");
@@ -494,16 +502,108 @@ public class Retail {
       }
    }
 
-   //order products. User can order any product from the store within 30 miles radius of his/her location. User will be asked to input storeID, productName, and numberofUnits. 
-   // After placing the order, the order information needs to be inserted in the Orders table. Product tables will need to be updated accordingly.
-   public static void placeOrder(Retail esql) {}
+   //order products User can order any product from the store within 30 miles radius of his/her location. User will be asked to input storeID, productName, and numberofUnits. 
+   // After placing the order, the order information needs to be inserted in the Orders table.
+   public static void placeOrder(Retail esql) {
+      try {
+         System.out.print("\tEnter user ID: ");
+         String userID = in.readLine();
+         System.out.print("\tEnter store ID: ");
+         String storeID = in.readLine();
+         System.out.print("\tEnter product name: ");
+         String productName = in.readLine();
+         System.out.print("\tEnter number of units: ");
+         String numberOfUnits = in.readLine();
 
-   //Update Product Information. For Managers, they can update the information of any product given the storeID. Manager can only update the product information (number of units, price per unit) of the store he/she manages. 
-   //Product and ProductUpdates tables will need to be updated accordingly if any updates take place. Manager can also view the information of last 5 recent updates of his/her store(s).
-   public static void updateProduct(Retail esql) {}
-	   
-   //browse orders list. Customers will be able to see the last 5 of his/her recent orders from the Orders table. They will be able to see storeID, storeName, productName, number of units ordered and date ordered. 
-   //A customer is not allowed to see the order list of other customers.
+         java.util.Date date = new java.util.Date();
+         Timestamp timestamp = new Timestamp(date.getTime());
+
+         String query1 = String.format("INSERT INTO Orders (customerID, storeID, productName, unitsOrdered, orderTime) VALUES ('%s', '%s', '%s', '%s', '%s')", userID, storeID, productName, numberOfUnits, timestamp);
+         String query2 = String.format("UPDATE Product SET numberOfUnits = (numberOfUnits - '%s') WHERE storeID = '%s' AND productName = '%s'", numberOfUnits, storeID, productName);
+         esql.executeUpdate(query1);
+         esql.executeUpdate(query2);
+         System.out.println("Order placed.");
+      } 
+      catch(Exception e) {
+         System.err.println(e.getMessage());
+      }
+   }
+
+   //managers update product information given storeID, they can view last 5 recent updates of their store
+   public static void updateProduct(Retail esql) {
+      try {
+         System.out.print("\tEnter manager ID: ");
+         String managerID = in.readLine();
+         System.out.print("\tEnter store ID: ");
+         String storeID = in.readLine();
+         System.out.print("\tEnter product: ");
+         String product = in.readLine();
+         System.out.print("\tEnter new number of units: ");
+         String numberOfUnits = in.readLine();
+         System.out.print("\tEnter new price per unit: ");
+         String pricePerUnit = in.readLine();
+         String query1 = String.format("UPDATE Product SET numberOfUnits = '%s', pricePerUnit = '%s' WHERE productName = '%s' AND '%s' IN (SELECT S.storeID FROM Store S, Users U WHERE U.userID = S.managerID AND U.userID = '%s')", numberOfUnits, pricePerUnit, product, storeID, managerID);
+         String query2 = String.format("INSERT INTO productUpdates(managerID, storeID, productName, updatedOn) VALUES('%s', '%s', '%s', now())", managerID, storeID, product);
+         esql.executeUpdate(query1);
+         esql.executeUpdate(query2);
+         System.out.println("Item updated.");
+      } 
+      catch(Exception e) {
+         System.err.println(e.getMessage());
+      }
+   }
+
+   //Admins will be able update products
+   public static void updateProductAdmin(Retail esql) {
+      try {
+         System.out.print("\tEnter admin ID: ");
+         String adminID = in.readLine();
+         System.out.print("\tEnter store ID: ");
+         String storeID = in.readLine();
+         System.out.print("\tEnter product: ");
+         String product = in.readLine();
+         System.out.print("\tEnter new number of units: ");
+         String numberOfUnits = in.readLine();
+         System.out.print("\tEnter new price per unit: ");
+         String pricePerUnit = in.readLine();
+         String query1 = String.format("UPDATE Product SET numberOfUnits = '%s', pricePerUnit = '%s' WHERE productName = '%s' AND storeID = '%s'", numberOfUnits, pricePerUnit, product, storeID);
+         String query2 = String.format("INSERT INTO productUpdates(managerID, storeID, productName, updatedOn) VALUES('%s', '%s', '%s', now())", adminID, storeID, product);
+         esql.executeUpdate(query1);
+         esql.executeUpdate(query2);
+         System.out.println("Item updated.");
+      } 
+      catch(Exception e) {
+         System.err.println(e.getMessage());
+      }
+   }
+
+
+   public static void updateUserAdmin(Retail esql) {
+      try {
+            System.out.print("\tEnter user ID: ");
+            String userID = in.readLine();
+            System.out.print("\tEnter new name: ");
+            String name = in.readLine();
+            System.out.print("\tEnter new password: ");
+            String password = in.readLine();
+            System.out.print("\tEnter new latitude: ");
+            String latitude = in.readLine();
+            System.out.print("\tEnter new longitude: ");
+            String longitude = in.readLine();
+            System.out.print("\tEnter new user type: ");
+            String type = in.readLine();
+            String query = String.format("UPDATE Users SET name = '%s', password = '%s', latitude = '%s', longitude = '%s', type = '%s' WHERE userID = '%s'", name, password, latitude, longitude, type, userID);
+            esql.executeUpdate(query);
+            System.out.println("User updated.");
+      } 
+      catch(Exception e) {
+         System.err.println(e.getMessage());
+      }
+   }
+
+
+   
+   //browse orders list. customers can see last 5 recent orders
    public static void viewRecentOrders(Retail esql) {
       try {
       System.out.println("\tEnter userID: ");
@@ -520,7 +620,7 @@ public class Retail {
       }
    }
 
-   // Manager can see all the orders information of the store(s) he/she manages. They will be able to see orderID, customer name, storeID, productName, and date of order for each order.
+   //manager can see all the orders information of the store(s) he/she manages.
    public static void viewRecentUpdates(Retail esql) {
       try {
          System.out.println("\tEnter managerID: ");
@@ -537,7 +637,7 @@ public class Retail {
 
    //manager can see top 5 most popular products in his/her store
    public static void viewPopularProducts(Retail esql) {
-   	try {
+      try {
          System.out.println("\tEnter managerID: ");
          int manager_id = Integer.parseInt(in.readLine());
          
@@ -555,7 +655,7 @@ public class Retail {
 
    //manager can view the top 5 customer's information who placed the most orders in his/her store
    public static void viewPopularCustomers(Retail esql) {
-   	try {
+     try {
          System.out.println("\tEnter managerID: ");
          int manager_id = Integer.parseInt(in.readLine());
          
@@ -572,9 +672,29 @@ public class Retail {
    }
 
    //put supply requests function
-   public static void placeProductSupplyRequests(Retail esql) {}
+   public static void placeProductSupplyRequests(Retail esql) {
+      try {
+         System.out.print("\tEnter manager ID: ");
+         String managerID = in.readLine();
+         System.out.print("\tEnter store ID: ");
+         String storeID = in.readLine();
+         System.out.print("\tEnter product name: ");
+         String product = in.readLine();
+         System.out.print("\tEnter new number of units: ");
+         String numberOfUnits = in.readLine();
+         System.out.print("Enter warehouse ID: ");
+         String warehouseID = in.readLine();
+         String query1 = String.format("INSERT INTO ProductSupplyRequests(managerID, warehouseID, storeID, productName, unitsRequested) VALUES('%s', '%s', '%s', '%s', '%s')", managerID, warehouseID, storeID, product, numberOfUnits);
+         String query2 = String.format("UPDATE Product SET numberOfUnits = numberOfUnits + %s WHERE productName = '%s' AND storeID = '%s'", numberOfUnits, product, storeID);
+         esql.executeUpdate(query1);
+         esql.executeUpdate(query2);
+         System.out.println("Product supply request placed.");
+      } 
+      catch(Exception e) {
+         System.err.println(e.getMessage());
+      }
+   }
 
 
 
 }//end Retail
-
