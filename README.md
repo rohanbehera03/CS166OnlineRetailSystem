@@ -1,5 +1,4 @@
 # CS166 Online Retail System
-by Rohan Behera and Justin Bollmann
 
 Compiling instructions:
 1. cd sql/scripts
